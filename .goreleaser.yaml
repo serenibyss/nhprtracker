@@ -25,7 +25,10 @@ builds:
         goarch: arm64
 
 release:
-  skip_upload: true
+  github:
+    owner: serenibyss
+    name: nhprtracker
+  draft: false
 
 nfpms:
   - package_name: nhprtracker
@@ -54,8 +57,6 @@ nfpms:
 
 archives:
   - format: tar.gz
-    files:
-      - README.md
     name_template: >-
       {{ .ProjectName }}-{{ .Env.version }}-{{- tolower .Os }}-
       {{- if eq .Arch "amd64" }}x86_64{{- else }}{{ .Arch }}{{ end }}

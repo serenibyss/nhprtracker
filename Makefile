@@ -1,6 +1,6 @@
 .DEFAULT_TARGET: all
 
-export version := 1.0.0-pre
+export version := 1.0.0
 export branch := $(shell git rev-parse --abbrev-ref HEAD)
 export commit := $(shell git rev-parse --short=8 HEAD)
 export internalPKG := github.com/serenibyss/nhprtracker/internal
@@ -39,5 +39,14 @@ release: clean
 	}
 
 	goreleaser release
+
+.PHONY: snapshot
+snapshot: clean
+	@command -v goreleaser &>/dev/null || { \
+		echo "target requires 'goreleaser': run make deps"; \
+		exit 1; \
+	}
+
+	goreleaser release --snapshot
 
 

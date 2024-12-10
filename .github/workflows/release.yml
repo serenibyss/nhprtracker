@@ -1,0 +1,36 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+
+      - name: Check Version
+        run: |
+          go version
+      - name: Make deps
+        run: |
+          make deps
+      - name: Check golangci-lint version
+        run: |
+          golangci-lint version
+      - name: Run lint
+        run: |
+          make lint
+      - name: Run release
+        run:
+          make release
