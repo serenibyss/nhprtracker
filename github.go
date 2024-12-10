@@ -3,11 +3,13 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/google/go-github/v67/github"
-	"github.com/serenibyss/nhprtracker/internal"
-	"go.uber.org/zap"
 	"slices"
 	"strings"
+
+	"github.com/google/go-github/v67/github"
+	"go.uber.org/zap"
+
+	"github.com/serenibyss/nhprtracker/internal"
 )
 
 // GatherRepositories gathers all repositories on the specified organization

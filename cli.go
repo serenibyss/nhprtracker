@@ -106,7 +106,7 @@ func main() {
 					// Gather all PRs merged after the specified date
 					prs, err := GatherMergedPRs(client, repoList)
 					if err != nil {
-						if prs == nil || len(prs) == 0 {
+						if len(prs) == 0 {
 							return err
 						}
 						zap.S().Error(err)
@@ -157,7 +157,7 @@ func main() {
 					// Gather all PRs merged after the specified date
 					prs, err := GatherMergedPRs(client, repoList)
 					if err != nil {
-						if prs == nil || len(prs) == 0 {
+						if len(prs) == 0 {
 							return err
 						}
 						zap.S().Error(err)
@@ -165,7 +165,7 @@ func main() {
 
 					finalPrs, err := FilterMatchingCommitsOnBranch(client, prs, releaseRepos)
 					if err != nil {
-						if finalPrs == nil || len(finalPrs) == 0 {
+						if len(finalPrs) == 0 {
 							return err
 						}
 						zap.S().Error(err)

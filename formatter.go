@@ -3,11 +3,11 @@ package main
 import (
 	"errors"
 	"fmt"
-	"go.uber.org/zap"
 	"slices"
 	"time"
 
 	"github.com/google/go-github/v67/github"
+	"go.uber.org/zap"
 )
 
 // SanitizeTimestamp converts a DateOnly timestamp to a time.Time.
