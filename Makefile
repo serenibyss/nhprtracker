@@ -1,6 +1,6 @@
 .DEFAULT_TARGET: all
 
-export version := 1.0.0
+export version := 1.0.1
 export branch := $(shell git rev-parse --abbrev-ref HEAD)
 export commit := $(shell git rev-parse --short=8 HEAD)
 export internalPKG := github.com/serenibyss/nhprtracker/internal
