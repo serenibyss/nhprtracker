@@ -1,0 +1,11 @@
+# binary name
+nhprtracker
+
+# code coverage during testing
+coverage.out
+
+# used for goreleaser
+dist/
+
+# goland local configuration files
+.idea/
