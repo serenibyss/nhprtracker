@@ -26,7 +26,7 @@ type GithubClient struct {
 
 func GetClient(org string, branch string, repos []string, timestamp time.Time, token string) (*GithubClient, error) {
 	token = getToken(token)
-	if token != "" {
+	if token == "" {
 		return nil, errors.New("could not find GITHUB_TOKEN environment variable")
 	}
 
@@ -60,7 +60,7 @@ func getToken(token string) string {
 	}
 
 	token = os.Getenv("GITHUB_TOKEN")
-	if token == "" {
+	if token != "" {
 		return token
 	}
 
