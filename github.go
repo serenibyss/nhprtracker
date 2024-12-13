@@ -282,3 +282,86 @@ func gatherCommitsToCheck(client *GithubClient, repo *github.Repository) ([]*git
 
 	return allCommits, nil
 }
+
+func UpdateBranchRules(client *GithubClient) ([]*github.Repository, error) {
+	var cleansedRepos []*github.Repository
+	opts := &github.RepositoryListByOrgOptions{
+		Type: "all",
+	}
+
+	for {
+		repos, resp, err := client.Repositories.ListByOrg(client.ctx, client.org, opts)
+		if err != nil {
+			zap.S().Named("rules").Errorf("failed to fetch some repositories: %v", err)
+			return nil, err
+		}
+
+		for _, repo := range repos {
+			// remove archived repos
+			if repo.GetArchived() {
+				continue
+			}
+
+			// Requires a paid plan that we do not have
+			if repo.GetPrivate() {
+				continue
+			}
+
+			hasBranch, err := checkForReleaseBranch(client, repo)
+			if err != nil {
+				zap.S().Named("rules").Errorf("error looking for release branch on repo %s", repo.GetName())
+				continue
+			}
+
+			if !hasBranch {
+				continue
+			}
+
+			zap.S().Named("rules").Debugf("found repo %s", repo.GetName())
+			cleansedRepos = append(cleansedRepos, repo)
+		}
+
+		if resp.NextPage == 0 {
+			break
+		}
+		opts.Page = resp.NextPage
+	}
+
+	var addedRepos []*github.Repository
+	for _, repo := range cleansedRepos {
+		repoName := repo.GetName()
+		rule, _, err := client.Repositories.GetBranchProtection(client.ctx, client.org, repoName, client.branch)
+		if err != nil && rule != nil {
+			zap.S().Named("rules").Errorf("failed to get rule for repo %s: %v", repoName, err)
+			continue
+		} else if rule != nil {
+			zap.S().Named("rules").Debugf("found valid rule for repo %s, skipping", repoName)
+			continue
+		}
+
+		requireConvRes := true
+		req := &github.ProtectionRequest{
+			RequiredPullRequestReviews: &github.PullRequestReviewsEnforcementRequest{
+				RequiredApprovingReviewCount: 1,
+				RequireCodeOwnerReviews:      true,
+			},
+			RequiredStatusChecks: &github.RequiredStatusChecks{
+				Checks: &[]*github.RequiredStatusCheck{
+					{
+						Context: "build-and-test / build-and-test",
+					},
+				},
+			},
+			RequiredConversationResolution: &requireConvRes,
+		}
+		zap.S().Named("rules").Debugf("adding rule to repo %s", repoName)
+		rule, _, err = client.Repositories.UpdateBranchProtection(client.ctx, client.org, repoName, client.branch, req)
+		if err != nil {
+			zap.S().Named("rules").Errorf("failed to add release/2.7.x branch protection for repo %s: %v", repoName, err)
+		}
+		if rule != nil {
+			addedRepos = append(addedRepos, repo)
+		}
+	}
+	return addedRepos, nil
+}

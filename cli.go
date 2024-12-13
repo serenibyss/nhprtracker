@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
@@ -172,6 +173,32 @@ func main() {
 					}
 
 					return PrintPRList(finalPrs, format)
+				},
+			},
+			{
+				Name:  "add-protections",
+				Usage: "Add branch protection rules to any repos with a branch matching the provided 'release-branch' option",
+				Action: func(cCtx *cli.Context) error {
+					org := cCtx.String("organization")
+					branch := cCtx.String("release-branch")
+					repos := cCtx.StringSlice("repos")
+					token := cCtx.String("token")
+					if token != "" && !strings.HasPrefix(token, "ghp_") {
+						return errors.New("provided token malformed, must use a valid GitHub token")
+					}
+
+					client, err := GetClient(org, branch, repos, time.Now(), token)
+					if err != nil {
+						return err
+					}
+
+					updatedRepos, err := UpdateBranchRules(client)
+					if len(updatedRepos) != 0 {
+						for _, repo := range updatedRepos {
+							zap.S().Named("output").Infof("Added branch protection rule for %s to repo %s/%s", client.branch, client.org, repo.GetName())
+						}
+					}
+					return err
 				},
 			},
 		},
