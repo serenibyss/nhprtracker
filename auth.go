@@ -3,7 +3,10 @@ package main
 import (
 	"context"
 	"errors"
+	"io"
 	"os"
+	"path/filepath"
+	"runtime"
 	"time"
 
 	"github.com/google/go-github/v67/github"
@@ -22,11 +25,9 @@ type GithubClient struct {
 }
 
 func GetClient(org string, branch string, repos []string, timestamp time.Time, token string) (*GithubClient, error) {
-	if token == "" {
-		token = os.Getenv("GITHUB_TOKEN")
-		if token == "" {
-			return nil, errors.New("could not find GITHUB_TOKEN environment variable")
-		}
+	token = getToken(token)
+	if token != "" {
+		return nil, errors.New("could not find GITHUB_TOKEN environment variable")
 	}
 
 	ctx := context.Background()
@@ -51,4 +52,46 @@ func GetClient(org string, branch string, repos []string, timestamp time.Time, t
 		repos:  repos,
 		date:   timestamp,
 	}, nil
+}
+
+func getToken(token string) string {
+	if token != "" {
+		return token
+	}
+
+	token = os.Getenv("GITHUB_TOKEN")
+	if token == "" {
+		return token
+	}
+
+	switch runtime.GOOS {
+	case "darwin":
+		fallthrough
+	case "windows":
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			return ""
+		}
+		fi, err := os.Open(filepath.Join(homeDir, ".github_personal_token"))
+		if err != nil {
+			return ""
+		}
+		data, err := io.ReadAll(fi)
+		if err != nil {
+			return ""
+		}
+		return string(data)
+	case "linux":
+		fi, err := os.Open(filepath.Join("/", ".github_personal_token"))
+		if err != nil {
+			return ""
+		}
+		data, err := io.ReadAll(fi)
+		if err != nil {
+			return ""
+		}
+		return string(data)
+	default:
+		return ""
+	}
 }
