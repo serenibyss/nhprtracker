@@ -203,6 +203,64 @@ func main() {
 					return err
 				},
 			},
+			{
+				Name:  "add-label",
+				Usage: "Create or edit a label on the specified repositories",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "name",
+						Aliases: []string{"n"},
+						Usage:   "The name of the label to create",
+					},
+					&cli.StringFlag{
+						Name:    "old-name",
+						Aliases: []string{"o"},
+						Usage:   "The name of the old label to update, if applicable",
+					},
+					&cli.StringFlag{
+						Name:    "color",
+						Aliases: []string{"c"},
+						Usage:   "The color of the label",
+					},
+					&cli.StringFlag{
+						Name:    "desc",
+						Aliases: []string{"d"},
+						Usage:   "The description of the label",
+					},
+					&cli.BoolFlag{
+						Name:  "update-only",
+						Usage: "Should new labels be made, or update existing only",
+					},
+				},
+				Action: func(cCtx *cli.Context) error {
+					org := cCtx.String("organization")
+					branch := cCtx.String("release-branch")
+					repos := cCtx.StringSlice("repos")
+					token := cCtx.String("token")
+					if token != "" && !strings.HasPrefix(token, "ghp_") {
+						return errors.New("provided token malformed, must use a valid GitHub token")
+					}
+
+					client, err := auth.GetClient(org, branch, repos, time.Time{}, token)
+					if err != nil {
+						return err
+					}
+
+					// Gather repositories to check
+					repoList, err := github.GatherRepositories(client)
+					if err != nil {
+						return err
+					}
+
+					return github.CreateLabelOnRepositories(client, repoList, &github.LabelData{
+						Name:       cCtx.String("name"),
+						OldName:    cCtx.String("old-name"),
+						Color:      cCtx.String("color"),
+						Desc:       cCtx.String("desc"),
+						UpdateOnly: cCtx.Bool("update-only"),
+					})
+				},
+			},
 		},
 	}
 
