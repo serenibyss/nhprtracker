@@ -10,6 +10,8 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
+	"github.com/serenibyss/nhprtracker/auth"
+	"github.com/serenibyss/nhprtracker/github"
 	"github.com/serenibyss/nhprtracker/internal"
 )
 
@@ -93,19 +95,19 @@ func main() {
 						return err
 					}
 
-					client, err := GetClient(org, branch, repos, timestamp, token)
+					client, err := auth.GetClient(org, branch, repos, timestamp, token)
 					if err != nil {
 						return err
 					}
 
 					// Gather repositories to check
-					repoList, err := GatherRepositories(client)
+					repoList, err := github.GatherRepositories(client)
 					if err != nil {
 						return err
 					}
 
 					// Gather all PRs merged after the specified date
-					prs, err := GatherMergedPRs(client, repoList)
+					prs, err := github.GatherMergedPRs(client, repoList)
 					if err != nil {
 						if len(prs) == 0 {
 							return err
@@ -138,25 +140,25 @@ func main() {
 						return err
 					}
 
-					client, err := GetClient(org, branch, repos, timestamp, token)
+					client, err := auth.GetClient(org, branch, repos, timestamp, token)
 					if err != nil {
 						return err
 					}
 
 					// Gather repositories to check
-					repoList, err := GatherRepositories(client)
+					repoList, err := github.GatherRepositories(client)
 					if err != nil {
 						return err
 					}
 
 					// Gather repositories with release branches to compare with
-					releaseRepos, err := GatherReleaseRepositories(client, repoList)
+					releaseRepos, err := github.GatherReleaseRepositories(client, repoList)
 					if err != nil {
 						return err
 					}
 
 					// Gather all PRs merged after the specified date
-					prs, err := GatherMergedPRs(client, repoList)
+					prs, err := github.GatherMergedPRs(client, repoList)
 					if err != nil {
 						if len(prs) == 0 {
 							return err
@@ -164,7 +166,7 @@ func main() {
 						zap.S().Error(err)
 					}
 
-					finalPrs, err := FilterMatchingCommitsOnBranch(client, prs, releaseRepos)
+					finalPrs, err := github.FilterMatchingCommitsOnBranch(client, prs, releaseRepos)
 					if err != nil {
 						if len(finalPrs) == 0 {
 							return err
@@ -187,15 +189,15 @@ func main() {
 						return errors.New("provided token malformed, must use a valid GitHub token")
 					}
 
-					client, err := GetClient(org, branch, repos, time.Now(), token)
+					client, err := auth.GetClient(org, branch, repos, time.Now(), token)
 					if err != nil {
 						return err
 					}
 
-					updatedRepos, err := UpdateBranchRules(client)
+					updatedRepos, err := github.UpdateBranchRules(client)
 					if len(updatedRepos) != 0 {
 						for _, repo := range updatedRepos {
-							zap.S().Named("output").Infof("Added branch protection rule for %s to repo %s/%s", client.branch, client.org, repo.GetName())
+							zap.S().Named("output").Infof("Added branch protection rule for %s to repo %s/%s", client.Branch, client.Org, repo.GetName())
 						}
 					}
 					return err

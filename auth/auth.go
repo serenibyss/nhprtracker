@@ -1,4 +1,4 @@
-package main
+package auth
 
 import (
 	"context"
@@ -17,11 +17,11 @@ import (
 type GithubClient struct {
 	*github.Client
 
-	ctx    context.Context
-	org    string
-	branch string
-	repos  []string
-	date   time.Time
+	Ctx    context.Context
+	Org    string
+	Branch string
+	Repos  []string
+	Date   time.Time
 }
 
 func GetClient(org string, branch string, repos []string, timestamp time.Time, token string) (*GithubClient, error) {
@@ -46,11 +46,11 @@ func GetClient(org string, branch string, repos []string, timestamp time.Time, t
 
 	return &GithubClient{
 		Client: client,
-		ctx:    ctx,
-		org:    org,
-		branch: branch,
-		repos:  repos,
-		date:   timestamp,
+		Ctx:    ctx,
+		Org:    org,
+		Branch: branch,
+		Repos:  repos,
+		Date:   timestamp,
 	}, nil
 }
 
